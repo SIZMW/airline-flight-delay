@@ -2,6 +2,10 @@ import os
 import csv
 import re
 import json
+import googlemaps
+import traceback
+import time
+from pprint import pprint
 from collections import namedtuple, defaultdict
 from recordclass import recordclass
 from datetime import date
@@ -13,12 +17,14 @@ parser = ArgumentParser()
 parser.add_argument('data_folder')
 parser.add_argument('airline_codes')
 parser.add_argument('airport_codes')
+parser.add_argument('gmaps_key_file')
 parser.add_argument('output_file')
 args = parser.parse_args()
 
 data_folder = os.path.abspath(args.data_folder)
 airline_codes = os.path.abspath(args.airline_codes)
 airport_codes = os.path.abspath(args.airport_codes)
+gmaps_key_file = os.path.abspath(args.gmaps_key_file)
 output_file = os.path.abspath(args.output_file)
 
 
@@ -31,16 +37,53 @@ def load_airline_names():
             yield code, airline_name
 airline_names = dict(load_airline_names())
 
-def load_airport_details():
+with open(gmaps_key_file, 'r') as f:
+    key = f.read()
+    print('Google Maps API key: "{}"'.format(key))
+    gmaps = googlemaps.Client(key=key)
+
+Location = namedtuple('Location', ['lat', 'lon'])
+
+def load_airport_addresses():
     with open(airport_codes, 'r') as f:
         r = csv.reader(f)
         next(r)
         for row in r:
             code, airport_loc_str = row
-            # TODO: define airport_loc as a dict with lat, lon from Google Maps
-            airport_loc = (0.0, 0.0)
-            yield code, airport_loc
-airport_details = dict(load_airport_details())
+            yield code, airport_loc_str
+
+airport_addresses = dict(load_airport_addresses())
+
+last_rate_reset_time = 0
+requests_in_last_second = 0
+airport_locations = dict()
+def get_airport_location(loc_str):
+    if loc_str in airport_locations: return airport_locations[loc_str]
+    geocode_result = None
+    try:
+        global requests_in_last_second, last_rate_reset_time
+        t = time.time()
+        if t > last_rate_reset_time + 1:
+            # print('reset rate')
+            requests_in_last_second = 0
+            last_rate_reset_time = t
+        if requests_in_last_second >= 50:
+            delay = 1.1 - (t - last_rate_reset_time)
+            # print('sleeping {:f}'.format(delay))
+            time.sleep(delay)
+        requests_in_last_second += 1
+        # print('requests in last second: {:d}'.format(requests_in_last_second))
+        geocode_result = gmaps.geocode(loc_str)
+        location = geocode_result[0]['geometry']['location']
+        location = Location(lat=location['lat'], lon=location['lng'])
+    except:
+        print('Location: {}'.format(loc_str))
+        print('API call result:')
+        pprint(geocode_result)
+        print(traceback.format_exc())
+        sys.exit()
+    airport_locations[loc_str] = location
+    return location
 
 def in_us(wac):
     return wac <= 93
@@ -48,6 +91,8 @@ def in_us(wac):
 DataKey = namedtuple('DataKey', ['airport', 'airline', 'month'])
 DataValue = recordclass('DataValue', ['avg_arr_delay', 'flight_count'])
 data_pts = defaultdict(lambda: DataValue(0, 0))
+
+print('Parsing flight data...')
 
 loading_bar_init(len(os.listdir(data_folder)))
 for data_file_path in os.listdir(data_folder):
@@ -78,7 +123,7 @@ for data_file_path in os.listdir(data_folder):
 
             arr_delay = float(ARR_DELAY)
 
-            key = DataKey(airport_details[dest_airport], airline_names[airline], flight_date.month)
+            key = DataKey(get_airport_location(airport_addresses[dest_airport]), airline_names[airline], flight_date.month)
             value = data_pts[key]
             value.flight_count += 1
             value.avg_arr_delay += arr_delay
@@ -93,7 +138,7 @@ loading_bar_init(len(data_pts))
 for key, value in data_pts.items():
     value.avg_arr_delay /= value.flight_count
     json_object = {**key._asdict(), **value._asdict()}
-    json_object['airport'] = {'lat': json_object['airport'][0], 'lon': json_object['airport'][1]}
+    json_object['airport'] = {'lat': json_object['airport'].lat, 'lon': json_object['airport'].lon}
     json_data.append(json_object)
     loading_bar_update()
 loading_bar_finish()
