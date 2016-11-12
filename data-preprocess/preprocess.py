@@ -6,6 +6,7 @@ import googlemaps
 import traceback
 import time
 from pprint import pprint
+import urllib.request, urllib.parse
 from collections import namedtuple, defaultdict
 from recordclass import recordclass
 from datetime import date
@@ -38,9 +39,8 @@ def load_airline_names():
 airline_names = dict(load_airline_names())
 
 with open(gmaps_key_file, 'r') as f:
-    key = f.read()
-    print('Google Maps API key: "{}"'.format(key))
-    gmaps = googlemaps.Client(key=key)
+    gmaps_api_key = f.read()
+    print('Google Maps API key: "{}"'.format(gmaps_api_key))
 
 Location = namedtuple('Location', ['lat', 'lon'])
 
@@ -57,8 +57,11 @@ airport_addresses = dict(load_airport_addresses())
 last_rate_reset_time = 0
 requests_in_last_second = 0
 airport_locations = dict()
+# pprint(json.loads(urllib.request.urlopen('https://maps.googleapis.com/maps/api/geocode/json?address=Portland%252C%2BOR%253A%2BPortland%2BInternational&key=AIzaSyAakOugaRniDkXkic5dBRa9GOpUbio57sk').read().decode('utf-8')))
 def get_airport_location(loc_str):
+    # return loc_str
     if loc_str in airport_locations: return airport_locations[loc_str]
+    # if loc_str == 'Portland, OR: Portland International': return Location(0, 0)
     geocode_result = None
     try:
         global requests_in_last_second, last_rate_reset_time
@@ -67,26 +70,36 @@ def get_airport_location(loc_str):
             # print('reset rate')
             requests_in_last_second = 0
             last_rate_reset_time = t
-        if requests_in_last_second >= 50:
+        if requests_in_last_second >= 10:
             delay = 1.1 - (t - last_rate_reset_time)
             # print('sleeping {:f}'.format(delay))
             time.sleep(delay)
+            # print('reset rate')
+            requests_in_last_second = 0
+            last_rate_reset_time = time.time()
         requests_in_last_second += 1
         # print('requests in last second: {:d}'.format(requests_in_last_second))
-        geocode_result = gmaps.geocode(loc_str)
-        location = geocode_result[0]['geometry']['location']
+        # print(loc_str)
+        # m = re.match(r'.+, (\w{2}): (.+)', loc_str)
+        # edited_loc_str = '{}, {}'.format(m.group(2), m.group(1))
+        # print(edited_loc_str)
+        geocode_result = json.loads(urllib.request.urlopen('https://maps.googleapis.com/maps/api/geocode/json?address={}&key={}'.format(urllib.parse.quote(loc_str), urllib.parse.quote(gmaps_api_key))).read().decode('utf-8'))
+        # geocode_result = gmaps.geocode(loc_str)
+        location = geocode_result['results'][0]['geometry']['location']
         location = Location(lat=location['lat'], lon=location['lng'])
+    except KeyboardInterrupt as e:
+        sys.exit()
     except:
         print('Location: {}'.format(loc_str))
         print('API call result:')
         pprint(geocode_result)
         print(traceback.format_exc())
-        sys.exit()
+        location = 'REPLACE ' + loc_str
     airport_locations[loc_str] = location
     return location
 
 def in_us(wac):
-    return wac <= 93
+    return wac <= 93 and wac not in [3, 4, 5]
 
 DataKey = namedtuple('DataKey', ['airport', 'airline', 'month'])
 DataValue = recordclass('DataValue', ['avg_arr_delay', 'flight_count'])
@@ -138,7 +151,8 @@ loading_bar_init(len(data_pts))
 for key, value in data_pts.items():
     value.avg_arr_delay /= value.flight_count
     json_object = {**key._asdict(), **value._asdict()}
-    json_object['airport'] = {'lat': json_object['airport'].lat, 'lon': json_object['airport'].lon}
+    if isinstance(json_object['airport'], Location):
+        json_object['airport'] = {'lat': json_object['airport'].lat, 'lon': json_object['airport'].lon}
     json_data.append(json_object)
     loading_bar_update()
 loading_bar_finish()
