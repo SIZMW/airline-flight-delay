@@ -24,49 +24,84 @@ loadJSON();
  */
 function loadJSON() {
   d3.json('data-preprocess/data.json', function(data) {
-    data.forEach(function(d) {
-      var airport_loc = null;
+    data.forEach(function(d, i) {
+      var airportLoc = null;
 
+      // TODO Replace missing location data
       if (d['airport'].lat && d['airport'].lon) {
-        airport_loc = {
+        airportLoc = {
           lat: d['airport'].lat,
           lon: d['airport'].lon
         };
       } else {
-        airport_loc = d['airport'];
+        airportLoc = d['airport'];
       }
 
-      var dataObj = {
-        airline: d['airline'],
-        avr_arr_delay: +d['avg_arr_delay'],
-        flight_count: +d['flight_count'],
-        month: +d['month'],
-        airport: airport_loc
-      };
-
-      return dataObj;
+      d.airline = d['airline'];
+      d.avgArrDelay = +d['avg_arr_delay'];
+      d.flightCount = +d['flight_count'];
+      d.month = +d['month'];
+      d.airport = airportLoc;
     });
 
-    console.log(data);
+    // Process down to airline names and average arrival delays
+    var airlineNames = d3.map(data, function(d) {
+        return d.airline;
+      })
+      .keys();
 
-    // TODO Draw chart
+    var airlineAverages = [];
+
+    data.forEach(function(d) {
+      var airlineName = d.airline;
+      var result = $.grep(airlineAverages, function(d) {
+        return d.airline === airlineName;
+      });
+
+      if (result.length == 0) {
+        var obj = {
+          airline: airlineName,
+          values: [],
+          avg: 0
+        };
+
+        obj.values.push(d.avgArrDelay);
+        airlineAverages.push(obj);
+      } else if (result.length == 1) {
+        result[0].values.push(d.avgArrDelay);
+      }
+    });
+
+    airlineAverages.forEach(function(d) {
+      var sum = 0;
+      for (i = 0; i < d.values.length; i++) {
+        sum += d.values[i];
+      }
+      sum /= d.values.length;
+      d.avg = sum;
+    });
+
+    console.log(airlineAverages);
+
+    // Load chart
+    loadBarChart(airlineAverages);
   });
 }
 
-// TODO Add real data file
 // TODO Fix bar chart for real data
 
 /**
  * Loads bar chart from the data set into the SVG element.
- * @param {svg} The SVG element.
  * @param {data} The data set from the input file.
  */
-function loadBarChart(svg, data) {
+function loadBarChart(data) {
+  var maxAvgValue = d3.max(data.map(function(d) {
+      return d.avg;
+    }));
+
   // Y axis scale
   var barHeightScale = d3.scaleLinear()
-    .domain([0.0, d3.max(data.map(function(d) {
-      return d.length;
-    }))])
+    .domain([0.0, (Math.floor(maxAvgValue / 10) + 1) * 10])
     .rangeRound([0, barMaxHeight]);
 
   // Bars group
@@ -90,11 +125,11 @@ function loadBarChart(svg, data) {
       return -barWidth / 2;
     })
     .attr('y', function(d) {
-      return -barHeightScale(d.length);
+      return -barHeightScale(d.avg);
     })
     .attr('width', barWidth)
     .attr('height', function(d) {
-      return barHeightScale(d.length)
+      return barHeightScale(d.avg)
     })
     .attr('fill', 'black');
 
@@ -104,9 +139,7 @@ function loadBarChart(svg, data) {
     .attr('x', 0)
     .attr('y', 5)
     .text(function(d) {
-      return Number(d.x0)
-        .toFixed(2) + ':' + Number(d.x1)
-        .toFixed(2);
+      return d.airline;
     })
     .attr('writing-mode', 'vertical-lr');
 
@@ -125,9 +158,9 @@ function loadBarChart(svg, data) {
   // Label
   barHeightAxis.append('text')
     .attr("class", "label")
-    .attr('x', -barMaxHeight / 2)
+    .attr('x', -barMaxHeight / 2 + 50)
     .attr("y", -margin.left)
     .attr("transform", "rotate(-90, 0, 0)")
     .style('stroke', 'black')
-    .text('Count');
+    .text('Average Arrival Delay');
 }
