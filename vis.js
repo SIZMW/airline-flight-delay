@@ -17,19 +17,37 @@ var svg = d3.select('#canvas')
   .attr('width', canvasWidth)
   .attr('height', canvasHeight);
 
+loadJSON();
+
 /**
- * Loads the CSV data set and converts the fields.
+ * Loads the JSON data set and converts the fields.
  */
-function loadCSV() {
-  d3.csv('data.csv', function(d) {
-    return {
-      // TODO return real values
-    };
-  }, function(error, data) {
-    if (error != null) {
-      console.log("Read error.");
-      return;
-    }
+function loadJSON() {
+  d3.json('data-preprocess/data.json', function(data) {
+    data.forEach(function(d) {
+      var airport_loc = null;
+
+      if (d['airport'].lat && d['airport'].lon) {
+        airport_loc = {
+          lat: d['airport'].lat,
+          lon: d['airport'].lon
+        };
+      } else {
+        airport_loc = d['airport'];
+      }
+
+      var dataObj = {
+        airline: d['airline'],
+        avr_arr_delay: +d['avg_arr_delay'],
+        flight_count: +d['flight_count'],
+        month: +d['month'],
+        airport: airport_loc
+      };
+
+      return dataObj;
+    });
+
+    console.log(data);
 
     // TODO Draw chart
   });
