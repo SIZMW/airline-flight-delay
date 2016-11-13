@@ -40,6 +40,7 @@ Selecting a specific airport in the `Bubble Chart` will show only the average ar
 
 ### Contributions
 Daniel //TODO
+
 Aditya //TODO
 
 ### Technical Achievements
@@ -50,6 +51,7 @@ Aditya //TODO
 
 ## Resources
 * [Stanford interesting datasets](http://cjlab.stanford.edu/2015/09/30/lab-launch-and-data-sets/)
+* [jQuery find object by property](http://stackoverflow.com/questions/7364150/find-object-by-id-in-an-array-of-javascript-objects)
 
 ## Usage
 The visualization can be seen [here](https://sizmw.github.io/05-MapsAndViews/).
