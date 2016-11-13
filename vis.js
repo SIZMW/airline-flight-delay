@@ -52,6 +52,7 @@ function loadJSON() {
 
     var airlineAverages = [];
 
+    // Push all values into arry
     data.forEach(function(d) {
       var airlineName = d.airline;
       var result = $.grep(airlineAverages, function(d) {
@@ -72,6 +73,7 @@ function loadJSON() {
       }
     });
 
+    // Process averages
     airlineAverages.forEach(function(d) {
       var sum = 0;
       for (i = 0; i < d.values.length; i++) {
@@ -81,25 +83,23 @@ function loadJSON() {
       d.avg = sum;
     });
 
-    console.log(airlineAverages);
-
     // Load chart
     loadBarChart(airlineAverages);
   });
 }
-
-// TODO Fix bar chart for real data
 
 /**
  * Loads bar chart from the data set into the SVG element.
  * @param {data} The data set from the input file.
  */
 function loadBarChart(data) {
+  // Calculate max value for domain
   var maxAvgValue = d3.max(data.map(function(d) {
       return d.avg;
     }));
 
   // Y axis scale
+  // Nicely round domain value max to be the next 10 above maximum value
   var barHeightScale = d3.scaleLinear()
     .domain([0.0, (Math.floor(maxAvgValue / 10) + 1) * 10])
     .rangeRound([0, barMaxHeight]);
