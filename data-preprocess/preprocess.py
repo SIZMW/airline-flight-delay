@@ -42,7 +42,7 @@ with open(gmaps_key_file, 'r') as f:
     gmaps_api_key = f.read()
     print('Google Maps API key: "{}"'.format(gmaps_api_key))
 
-Location = namedtuple('Location', ['lat', 'lon'])
+Location = namedtuple('Location', ['name', 'lat', 'lon'])
 
 def load_airport_addresses():
     with open(airport_codes, 'r') as f:
@@ -86,7 +86,7 @@ def get_airport_location(loc_str):
         geocode_result = json.loads(urllib.request.urlopen('https://maps.googleapis.com/maps/api/geocode/json?address={}&key={}'.format(urllib.parse.quote(loc_str), urllib.parse.quote(gmaps_api_key))).read().decode('utf-8'))
         # geocode_result = gmaps.geocode(loc_str)
         location = geocode_result['results'][0]['geometry']['location']
-        location = Location(lat=location['lat'], lon=location['lng'])
+        location = Location(name=loc_str, lat=location['lat'], lon=location['lng'])
     except KeyboardInterrupt as e:
         sys.exit()
     except:
@@ -152,7 +152,7 @@ for key, value in data_pts.items():
     value.avg_arr_delay /= value.flight_count
     json_object = {**key._asdict(), **value._asdict()}
     if isinstance(json_object['airport'], Location):
-        json_object['airport'] = {'lat': json_object['airport'].lat, 'lon': json_object['airport'].lon}
+        json_object['airport'] = {'name': json_object['airport'].name, 'lat': json_object['airport'].lat, 'lon': json_object['airport'].lon}
     json_data.append(json_object)
     loading_bar_update()
 loading_bar_finish()

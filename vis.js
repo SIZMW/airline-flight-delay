@@ -24,68 +24,105 @@ loadJSON();
  */
 function loadJSON() {
   d3.json('data-preprocess/data.json', function(data) {
-    data.forEach(function(d, i) {
-      var airportLoc = null;
-
-      // TODO Replace missing location data
-      if (d['airport'].lat && d['airport'].lon) {
-        airportLoc = {
-          lat: d['airport'].lat,
-          lon: d['airport'].lon
-        };
-      } else {
-        airportLoc = d['airport'];
-      }
-
-      d.airline = d['airline'];
-      d.avgArrDelay = +d['avg_arr_delay'];
-      d.flightCount = +d['flight_count'];
-      d.month = +d['month'];
-      d.airport = airportLoc;
-    });
-
     // Process down to airline names and average arrival delays
-    var airlineNames = d3.map(data, function(d) {
-        return d.airline;
-      })
-      .keys();
 
-    var airlineAverages = [];
+    var airportAverages = {};
+    var airlineAverages = {};
+    var monthAverages = {};
 
-    // Push all values into arry
     data.forEach(function(d) {
-      var airlineName = d.airline;
-      var result = $.grep(airlineAverages, function(d) {
-        return d.airline === airlineName;
-      });
-
-      if (result.length == 0) {
-        var obj = {
-          airline: airlineName,
-          values: [],
-          avg: 0
+      var airportAverage = airportAverages[d.airport.name];
+      if (airportAverage) {
+        airportAverage.avg += d.avgArrDelay;
+        airportAverage.flightCount += d.flightCount;
+        airportAverage.dataCount += 1;
+      }
+      else {
+        airportAverages[d.airport.name] = {
+          airport: d.airport,
+          avg: d.avgArrDelay,
+          flightCount: d.flightCount,
+          dataCount: 1
         };
+      }
 
-        obj.values.push(d.avgArrDelay);
-        airlineAverages.push(obj);
-      } else if (result.length == 1) {
-        result[0].values.push(d.avgArrDelay);
+      var airlineAverage = airlineAverages[d.airline];
+      if (airlineAverage) {
+        airlineAverage.avg += d.avgArrDelay;
+        airlineAverage.flightCount += d.flightCount;
+        airlineAverage.dataCount += 1;
+      }
+      else {
+        airlineAverages[d.airline] = {
+          airline: d.airline,
+          avg: d.avgArrDelay,
+          flightCount: d.flightCount,
+          dataCount: 1
+        }
+      }
+
+      var monthAverage = monthAverages[d.month];
+      if (monthAverage) {
+        monthAverage.avg += d.avgArrDelay;
+        monthAverage.flightCount += d.flightCount;
+        monthAverage.dataCount += 1;
+      }
+      else {
+        monthAverages[d.month] = {
+          month: d.month,
+          avg: d.avgArrDelay,
+          flightCount: d.flightCount,
+          dataCount: 1
+        }
       }
     });
 
-    // Process averages
-    airlineAverages.forEach(function(d) {
-      var sum = 0;
-      for (i = 0; i < d.values.length; i++) {
-        sum += d.values[i];
-      }
-      sum /= d.values.length;
-      d.avg = sum;
+    airportAverages = Object.values(airportAverages).map(function (d) {
+      d.avg /= d.dataCount;
+      return d;
     });
+    airlineAverages = Object.values(airlineAverages).map(function (d) {
+      d.avg /= d.dataCount;
+      return d;
+    });
+    monthAverages = Object.values(monthAverages).map(function (d) {
+      d.avg /= d.dataCount;
+      return d;
+    });
+
+    console.log(airportAverages);
+    console.log(airlineAverages);
+    console.log(monthAverages);
 
     // Load chart
+    loadMap(airportAverages);
     loadBarChart(airlineAverages);
   });
+}
+
+function loadMap(data) {
+  d3.json('us-10m.v1.json', function (error, us) {
+    var width = 960;
+    var height = 600;
+
+    var svg = d3.select('#map-canvas');
+    svg.attr('width', width);
+    svg.attr('height', height);
+
+    var geoPath = d3.geoPath();
+    var proj = geoPath.projection();
+
+    var states = svg
+      .selectAll('.state')
+      .data(topojson.feature(us, us.objects.states).features)
+      .enter()
+        .append('g')
+        .classed('state', true);
+
+    states
+        .append('path')
+        .attr('d', geoPath);
+  })
 }
 
 /**
