@@ -136,12 +136,12 @@ function loadBarChart(data) {
   // Labels on X axis
   var percentBarLabels = avgDelayBars
     .append('text')
-    .attr('x', 0)
+    .attr('x', 5)
     .attr('y', 5)
     .text(function(d) {
       return d.airline;
     })
-    .attr('writing-mode', 'vertical-lr');
+    .attr("transform", "rotate(90, 0, 0)");
 
   // Invert Y axis scale for left axis
   barHeightScale.rangeRound([barMaxHeight, 0]);
