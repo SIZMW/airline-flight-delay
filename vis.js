@@ -16,6 +16,10 @@ var barMaxHeight = 300;
 var minDelay = -10;
 var maxDelay = 30;
 
+var tooltip = d3.select('body')
+  .append('div')
+  .attr('class', 'tooltip');
+
 loadJSON();
 
 /**
@@ -174,7 +178,16 @@ function loadMap(usStates) {
           .classed('airport', true);
 
       enter
-        .append('circle');
+        .append('circle')
+        .on('mouseover', function(d) {
+          tooltipMapMouseOver(d);
+        })
+        .on('mousemove', function(d) {
+          tooltipMapMouseMove(d);
+        })
+        .on('mouseout', function(d) {
+          tooltipMouseOut(d);
+        });
 
       // EXIT
 
@@ -282,7 +295,17 @@ function loadBarChart(airlines) {
 
     enter
       .append('rect')
-      .attr('width', barWidth);
+      .attr('width', barWidth)
+      .attr('fill', 'black')
+      .on('mouseover', function(d) {
+        tooltipBarMouseOver(d);
+      })
+      .on('mousemove', function(d) {
+        tooltipBarMouseMove(d);
+      })
+      .on('mouseout', function(d) {
+        tooltipMouseOut(d);
+      });
 
     // EXIT
 
@@ -341,9 +364,6 @@ function loadLineChart() {
     });
 
   svg.append('g')
-    .classed('dots', true);
-
-  svg.append('g')
     .attr('class', 'y-axis')
     .attr('transform', 'translate(' + margin.left + ',0)');
 
@@ -355,6 +375,9 @@ function loadLineChart() {
     .attr('class', 'line')
     .attr('fill', 'none')
     .attr('stroke', 'black');
+
+  svg.append('g')
+    .classed('dots', true);
 
   function update(data) {
     // avgDelayScale
@@ -371,7 +394,25 @@ function loadLineChart() {
       .classed('dot', true)
 
     enter.append('circle')
-      .attr('r', 10);
+      .attr('r', 5)
+      .attr('opacity', 1)
+      .on('mouseover', function(d) {
+        tooltipLineMouseOver(d);
+        d3.select(this)
+          .transition()
+          .duration(200)
+          .attr('opacity', 1);
+      })
+      .on('mousemove', function(d) {
+        tooltipLineMouseMove(d);
+      })
+      .on('mouseout', function(d) {
+        tooltipMouseOut(d);
+        d3.select(this)
+          .transition()
+          .duration(200)
+          .attr('opacity', 1);
+      });
 
     // EXIT
 
@@ -407,4 +448,54 @@ function loadLineChart() {
   }
 
   return update;
+}
+
+function tooltipMapMouseOver(d) {
+  tooltipMouseOver(d, d.airport.name);
+}
+
+function tooltipMapMouseMove(d) {
+  tooltipMouseMove(d, d.airport.name);
+}
+
+function tooltipBarMouseOver(d) {
+  tooltipMouseOver(d, Number(d.avg).toFixed(2) + "");
+}
+
+function tooltipBarMouseMove(d) {
+  tooltipMouseMove(d, Number(d.avg).toFixed(2) + "");
+}
+
+function tooltipLineMouseOver(d) {
+  tooltipBarMouseOver(d);
+
+}
+
+function tooltipLineMouseMove(d) {
+  tooltipBarMouseMove(d);
+}
+
+function tooltipMouseOver(d, text) {
+  tooltip
+    .style('top', (d3.event.pageY - 20) + "px")
+    .style('left', (d3.event.pageX) + "px")
+    .text(text);
+
+  tooltip.transition()
+    .duration(200)
+    .style('opacity', 1)
+}
+
+function tooltipMouseMove(d, text) {
+  tooltip
+    .style('top', (d3.event.pageY - 20) + "px")
+    .style('left', (d3.event.pageX) + "px")
+    .text(text);
+}
+
+function tooltipMouseOut(d) {
+  tooltip
+    .transition()
+    .duration(200)
+    .style('opacity', 0)
 }
