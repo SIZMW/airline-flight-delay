@@ -13,10 +13,6 @@ var barWidth = 20;
 var barSpacing = 2;
 var barMaxHeight = 300;
 
-var svg = d3.select('#canvas')
-  .attr('width', canvasWidth)
-  .attr('height', canvasHeight);
-
 loadJSON();
 
 /**
@@ -97,6 +93,7 @@ function loadJSON() {
     // Load chart
     loadMap(airportAverages);
     loadBarChart(airlineAverages);
+    loadLineChart(monthAverages);
   });
 }
 
@@ -130,6 +127,10 @@ function loadMap(data) {
  * @param {data} The data set from the input file.
  */
 function loadBarChart(data) {
+  var svg = d3.select('#bar-canvas')
+  .attr('width', canvasWidth)
+  .attr('height', canvasHeight);
+
   // Calculate max value for domain
   var maxAvgValue = d3.max(data.map(function(d) {
       return d.avg;
@@ -200,4 +201,53 @@ function loadBarChart(data) {
     .attr("transform", "rotate(-90, 0, 0)")
     .style('stroke', 'black')
     .text('Average Arrival Delay');
+}
+
+function loadLineChart(data) {
+  var svg = d3.select('#line-canvas')
+    .attr('width', canvasWidth)
+    .attr('height', canvasHeight);
+
+  var monthScale = d3.scalePoint()
+    .domain([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12])
+    .range([0, canvasWidth - margin.right - margin.left])
+    .padding(0.25);
+
+  var avgDelayScale = d3.scaleLinear()
+    .domain([0.0, d3.max(data.map(function(d) {
+      return d.avg;
+    }))])
+    .rangeRound([canvasHeight - margin.bottom, 0]);
+
+  var line = d3.line()
+    .x(function(d) {
+      return monthScale(d.month);
+    })
+    .y(function(d) {
+      return avgDelayScale(d.avg);
+    });
+
+    var leftAxis = d3.axisLeft(avgDelayScale);
+    var botAxis = d3.axisBottom(monthScale)
+      .tickFormat(function(d) {
+        return d3.timeFormat('%b')(d3.timeParse('%m')(d));
+      });
+
+    svg.append('g')
+      .attr('class', 'y-axis')
+      .attr('transform', 'translate(' + margin.left + ',0)')
+      .call(leftAxis);
+
+    svg.append('g')
+      .attr('class', 'x-axis')
+      .attr('transform', 'translate(' + margin.left + ',' + (canvasHeight - margin.bottom) + ')')
+      .call(botAxis);
+
+    svg.append('path')
+      .datum(data)
+      .attr('class', 'line')
+      .attr('d', line)
+      .attr('transform', 'translate(' + margin.left + ', 0)')
+      .attr('fill', 'none')
+      .attr('stroke', 'black');
 }
