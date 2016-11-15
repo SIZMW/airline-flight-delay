@@ -39,21 +39,20 @@ Selecting a specific airline in the `Bar Chart` will show the average arrival de
 Selecting a specific airport in the `Bubble Chart` will show only the average arrival delay at that airport.
 
 ### Contributions
-Daniel //TODO
+Daniel contributed most to the map visualization and interactions and the preprocessing for our data set.
 
-Aditya //TODO
+Aditya contributed most to the bar graph visualization and interactions and the line graph visualization and interactions.
 
 ### Technical Achievements
-//TODO
+One of the heaviest operations when doing interactions between views is having to change the other views based on selections. We spent time to make the update process easy by creating update functions for each of the visualizations. This made it faster and more efficient to actually update the data in the visualization, not just clearing the SVG and redrawing all the new data. It also enabled us to simply recalculate the new values instead of reloading the data with parameters from the selection, which saves times.
 
 ### Design Achievements
-//TODO
+
 
 ## Resources
 * [Stanford interesting datasets](http://cjlab.stanford.edu/2015/09/30/lab-launch-and-data-sets/)
-* [jQuery find object by property](http://stackoverflow.com/questions/7364150/find-object-by-id-in-an-array-of-javascript-objects)
+* [d3 time formatting](http://bl.ocks.org/zanarmstrong/ca0adb7e426c12c06a95)
+* [d3 line chart example](https://bl.ocks.org/mbostock/3883245)
 
 ## Usage
 The visualization can be seen [here](https://sizmw.github.io/05-MapsAndViews/).
-
-
