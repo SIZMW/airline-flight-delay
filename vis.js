@@ -379,6 +379,13 @@ function loadLineChart() {
   svg.append('g')
     .classed('dots', true);
 
+  svg.append('text')
+    .attr("class", "label")
+    .attr('x', -canvasHeight / 2 - 50)
+    .attr("y", margin.left / 2 - 7)
+    .attr("transform", "rotate(-90, 0, 0)")
+    .text('Average Arrival Delay');
+
   function update(data) {
     // avgDelayScale
     //   .domain(d3.extent(data, function(d) { return d.avg; }));
@@ -398,20 +405,12 @@ function loadLineChart() {
       .attr('opacity', 1)
       .on('mouseover', function(d) {
         tooltipLineMouseOver(d);
-        d3.select(this)
-          .transition()
-          .duration(200)
-          .attr('opacity', 1);
       })
       .on('mousemove', function(d) {
         tooltipLineMouseMove(d);
       })
       .on('mouseout', function(d) {
         tooltipMouseOut(d);
-        d3.select(this)
-          .transition()
-          .duration(200)
-          .attr('opacity', 1);
       });
 
     // EXIT
@@ -451,11 +450,11 @@ function loadLineChart() {
 }
 
 function tooltipMapMouseOver(d) {
-  tooltipMouseOver(d, d.airport.name);
+  tooltipMouseOver(d, d.airport.name + ', Average: ' + Number(d.avg).toFixed(2));
 }
 
 function tooltipMapMouseMove(d) {
-  tooltipMouseMove(d, d.airport.name);
+  tooltipMouseMove(d, d.airport.name + ', Average: ' + Number(d.avg).toFixed(2));
 }
 
 function tooltipBarMouseOver(d) {
