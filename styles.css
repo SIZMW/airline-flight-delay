@@ -2,10 +2,6 @@ body {
   font-family: Roboto;
 }
 
-svg {
-  margin-bottom: 4em;
-}
-
 .label, .airline-label {
   fill: black;
 }
@@ -29,4 +25,8 @@ svg {
 
 .airport.on-time {
   fill: orange;
+}
+
+.dot circle {
+  fill: black;
 }

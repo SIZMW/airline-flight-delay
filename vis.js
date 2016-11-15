@@ -1,6 +1,6 @@
 // Margin amounts
 var margin = {
-  top: 20,
+  top: 10,
   right: 20,
   bottom: 30,
   left: 40
@@ -14,7 +14,7 @@ var barSpacing = 2;
 var barMaxHeight = 300;
 
 var minDelay = -10;
-var maxDelay = 20;
+var maxDelay = 30;
 
 loadJSON();
 
@@ -131,8 +131,8 @@ function loadMap(usStates) {
 
     var delayScale = d3.scalePow()
       .exponent(2)
-      .domain([minDelay, maxDelay])
-      .range([0, 100]);
+      .domain([0, Math.max(Math.abs(minDelay), Math.abs(maxDelay))])
+      .range([0, 300]);
 
     var proj = d3.geoAlbersUsa();
     var geoPath = d3.geoPath(proj);
@@ -209,7 +209,7 @@ function loadMap(usStates) {
 function loadBarChart(airlines) {
   var svg = d3.select('#bar-canvas')
   .attr('width', canvasWidth)
-  .attr('height', canvasHeight);
+  .attr('height', canvasHeight + 150);
 
   // Y axis scale
   // Nicely round domain value max to be the next 10 above maximum value
@@ -324,12 +324,12 @@ function loadLineChart() {
 
   var monthScale = d3.scalePoint()
     .domain([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12])
-    .range([0, canvasWidth - margin.right - margin.left])
+    .range([margin.left, canvasWidth - margin.right])
     .padding(0.25);
 
   var avgDelayScale = d3.scaleLinear()
     .domain([minDelay, maxDelay])
-    .rangeRound([canvasHeight - margin.bottom, 0]);
+    .rangeRound([canvasHeight - margin.bottom, margin.top]);
 
   var line = d3.line()
     .x(function(d) {
@@ -337,16 +337,18 @@ function loadLineChart() {
     });
 
   svg.append('g')
+    .classed('dots', true);
+
+  svg.append('g')
     .attr('class', 'y-axis')
     .attr('transform', 'translate(' + margin.left + ',0)');
 
   svg.append('g')
     .attr('class', 'x-axis')
-    .attr('transform', 'translate(' + margin.left + ',' + (canvasHeight - margin.bottom) + ')');
+    .attr('transform', 'translate(0,' + (canvasHeight - margin.bottom) + ')');
 
   svg.append('path')
     .attr('class', 'line')
-    .attr('transform', 'translate(' + margin.left + ', 0)')
     .attr('fill', 'none')
     .attr('stroke', 'black');
 
@@ -354,7 +356,31 @@ function loadLineChart() {
     // avgDelayScale
     //   .domain(d3.extent(data, function(d) { return d.avg; }));
 
+    var dots = svg.select('.dots')
+      .selectAll('.dot')
+      .data(data);
+
+    // ENTER
+
+    var enter = dots.enter()
+      .append('g')
+      .classed('dot', true)
+
+    enter.append('circle')
+      .attr('r', 10);
+
+    // EXIT
+
+    dots.exit().remove();
+
     // UPDATE
+
+    var dots = svg.select('.dots')
+      .selectAll('.dot');
+
+    dots.select('circle')
+      .attr('cx', function (d) { return monthScale(d.month); })
+      .attr('cy', function (d) { return avgDelayScale(d.avg); });
 
     line
       .y(function(d) {
