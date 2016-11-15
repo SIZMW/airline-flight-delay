@@ -16,17 +16,13 @@ body {
 }
 
 .airport.early {
-  fill: green;
+  fill: #2ca02c;
 }
 
 .airport.late {
-  fill: red;
+  fill: #d62728;
 }
 
 .airport.on-time {
-  fill: orange;
-}
-
-.dot circle {
-  fill: black;
+  fill: #ff7f0e;
 }

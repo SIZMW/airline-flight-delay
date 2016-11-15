@@ -219,6 +219,8 @@ function loadBarChart(airlines) {
 
   var graphWidth = airlines.length * (barWidth + barSpacing);
 
+  var barColorScale = d3.scaleOrdinal(d3.schemeCategory20);
+
   var airlineScale = d3.scalePoint()
     .domain(airlines)
     .range([canvasWidth / 2 - graphWidth / 2, canvasWidth / 2 + graphWidth / 2]);
@@ -280,8 +282,7 @@ function loadBarChart(airlines) {
 
     enter
       .append('rect')
-      .attr('width', barWidth)
-      .attr('fill', 'black');
+      .attr('width', barWidth);
 
     // EXIT
 
@@ -305,7 +306,8 @@ function loadBarChart(airlines) {
       })
       .attr('height', function(d) {
         return barHeightScale(d.avg)
-      });
+      })
+      .attr('fill', function (d, i) { return barColorScale(i); });
 
     var barAxis = d3.axisLeft(barHeightScale.copy().rangeRound([barMaxHeight, 0]));
 
@@ -330,6 +332,8 @@ function loadLineChart() {
   var avgDelayScale = d3.scaleLinear()
     .domain([minDelay, maxDelay])
     .rangeRound([canvasHeight - margin.bottom, margin.top]);
+
+  var barColorScale = d3.scaleOrdinal(d3.schemeCategory20);
 
   var line = d3.line()
     .x(function(d) {
@@ -380,7 +384,8 @@ function loadLineChart() {
 
     dots.select('circle')
       .attr('cx', function (d) { return monthScale(d.month); })
-      .attr('cy', function (d) { return avgDelayScale(d.avg); });
+      .attr('cy', function (d) { return avgDelayScale(d.avg); })
+      .attr('fill', function (d, i) { return barColorScale(i); });
 
     line
       .y(function(d) {
