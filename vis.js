@@ -292,10 +292,10 @@ function loadBarChart(airlines) {
     .attr('transform', 'translate(' + (canvasWidth / 2 - graphWidth / 2 - 5) + ',' + (-barMaxHeight) + ')')
 
   // Label
-  barHeightAxis.append('text')
-    .attr("class", "label")
-    .attr('x', -barMaxHeight / 2 + 50)
-    .attr("y", -margin.left)
+  svg.append('text')
+    .classed("axis-label", true)
+    .attr('x', -canvasHeight / 2 + 25)
+    .attr("y", canvasWidth / 2 - graphWidth / 2 - margin.left)
     .attr("transform", "rotate(-90, 0, 0)")
     .text('Average Arrival Delay');
 
