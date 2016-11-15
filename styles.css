@@ -2,6 +2,10 @@ body {
   font-family: Roboto;
 }
 
+#vis {
+  margin-top: 5em;
+}
+
 .label, .airline-label {
   fill: black;
 }
@@ -15,15 +19,15 @@ body {
   fill-opacity: 0.6;
 }
 
-.airport.early {
+.early {
   fill: #2ca02c;
 }
 
-.airport.late {
+.late {
   fill: #d62728;
 }
 
-.airport.on-time {
+.on-time {
   fill: #ff7f0e;
 }
 

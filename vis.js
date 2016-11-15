@@ -111,10 +111,6 @@ function loadJSON() {
           return d;
         });
 
-        console.log(airportAverages);
-        console.log(airlineAverages);
-        console.log(monthAverages);
-
         updateMap(airportAverages);
         updateBarChart(airlineAverages);
         updateLineChart(monthAverages);
@@ -136,23 +132,55 @@ function loadMap(usStates) {
     var delayScale = d3.scalePow()
       .exponent(2)
       .domain([0, Math.max(Math.abs(minDelay), Math.abs(maxDelay))])
-      .range([0, 300]);
+      .range([4, 300]);
 
     var proj = d3.geoAlbersUsa();
     var geoPath = d3.geoPath(proj);
 
-    var states = canvas
+    canvas
+      .append('text')
+      .attr('x', 500)
+      .attr('y', 30)
+      .attr('text-anchor', 'middle')
+      .text('Average Arrival Delay per Airport')
+
+    canvas
       .append('g')
       .classed('states', true)
       .selectAll('.state')
       .data(usStates.features)
       .enter()
         .append('g')
-        .classed('state', true);
-
-    states
+        .classed('state', true)
         .append('path')
         .attr('d', geoPath);
+
+    legendRectSize = 12;
+
+    var legendItems = canvas.append('g')
+      .classed('legend', true)
+      .attr('transform', 'translate(70,330)')
+      .selectAll('.legend-item')
+      .data(['early', 'late'])
+      .enter()
+        .append('g')
+        .classed('legend-item', true)
+        .attr('transform', function (d, i) { return 'translate(0,' + (i * 20) + ')'; });
+
+    legendItems
+      .append('circle')
+      .attr('cx', -legendRectSize/2 - 2)
+      .attr('cy', 0)
+      .attr('r', legendRectSize/2)
+      .attr('class', function (d) { return d; });
+
+    legendItems
+      .append('text')
+      .attr('x', 0)
+      .attr('y', 0)
+      .attr('fill', 'black')
+      .attr('alignment-baseline', 'central')
+      .text(function (d) { return d; });
 
     canvas
       .append('g')
@@ -253,7 +281,7 @@ function loadBarChart(airlines) {
       .attr('y', function (d) { return -airlineScale(d) - barWidth/2; })
       .attr('x', barMaxHeight + 10 + 5)
       .attr("transform", "rotate(90, 0, 0)")
-      .attr('alignment-baseline', 'middle');
+      .attr('alignment-baseline', 'central');
 
 
   // Left axis
