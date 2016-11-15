@@ -101,20 +101,29 @@ function loadJSON() {
 }
 
 function loadMap(data) {
-  d3.json('us-10m.v1.json', function (error, us) {
+  d3.json('us-states.json', function (error, usStates) {
     var width = 960;
     var height = 600;
 
-    var svg = d3.select('#map-canvas');
-    svg.attr('width', width);
-    svg.attr('height', height);
+    var canvas = d3.select('#map-canvas');
+    canvas.attr('width', width);
+    canvas.attr('height', height);
 
-    var geoPath = d3.geoPath();
-    var proj = geoPath.projection();
+    var delayScale = d3.scalePow()
+      .exponent(2)
+      .domain([0, d3.max(data, function (d) { return Math.abs(d.avg); })])
+      .range([10, 100]);
 
-    var states = svg
+    var proj = d3.geoAlbersUsa();
+    var geoPath = d3.geoPath(proj);
+    data.forEach(function (d) {
+      d.pos = proj([d.airport.lon, d.airport.lat]);
+      // console.log([d.airport.lon, d.airport.lat], d.pos);
+    });
+
+    var states = canvas
       .selectAll('.state')
-      .data(topojson.feature(us, us.objects.states).features)
+      .data(usStates.features)
       .enter()
         .append('g')
         .classed('state', true);
@@ -122,6 +131,22 @@ function loadMap(data) {
     states
         .append('path')
         .attr('d', geoPath);
+
+    var airports = canvas
+      .selectAll('.airport')
+      .data(data)
+      .enter()
+        .append('g')
+        .classed('airport', true)
+        .classed('late', function (d) { return d.avg > 0; })
+        .classed('early', function (d) { return d.avg < 0; })
+        .classed('on-time', function (d) { return d.avg == 0; });
+
+    airports
+      .append('circle')
+      .attr('r', function (d) { return Math.sqrt(delayScale(Math.abs(d.avg))); })
+      .attr('cx', function (d) { return d.pos[0]; })
+      .attr('cy', function (d) { return d.pos[1]; });
   })
 }
 
