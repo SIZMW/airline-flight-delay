@@ -13,6 +13,9 @@ var barWidth = 20;
 var barSpacing = 2;
 var barMaxHeight = 300;
 
+var minDelay = -10;
+var maxDelay = 20;
+
 loadJSON();
 
 /**
@@ -20,85 +23,105 @@ loadJSON();
  */
 function loadJSON() {
   d3.json('data-preprocess/data.json', function(data) {
-    // Process down to airline names and average arrival delays
+    d3.json('us-states.json', function (usStates) {
+      // Process down to airline names and average arrival delays
 
-    var airportAverages = {};
-    var airlineAverages = {};
-    var monthAverages = {};
-
-    data.forEach(function(d) {
-      var airportAverage = airportAverages[d.airport.name];
-      if (airportAverage) {
-        airportAverage.avg += d.avgArrDelay;
-        airportAverage.flightCount += d.flightCount;
-        airportAverage.dataCount += 1;
-      }
-      else {
-        airportAverages[d.airport.name] = {
-          airport: d.airport,
-          avg: d.avgArrDelay,
-          flightCount: d.flightCount,
-          dataCount: 1
-        };
-      }
-
-      var airlineAverage = airlineAverages[d.airline];
-      if (airlineAverage) {
-        airlineAverage.avg += d.avgArrDelay;
-        airlineAverage.flightCount += d.flightCount;
-        airlineAverage.dataCount += 1;
-      }
-      else {
-        airlineAverages[d.airline] = {
-          airline: d.airline,
-          avg: d.avgArrDelay,
-          flightCount: d.flightCount,
-          dataCount: 1
+      var airlines = [];
+      data.forEach(function (d) {
+        if (!airlines.includes(d.airline)) {
+          airlines.push(d.airline);
         }
+      });
+
+      var updateMap = loadMap(usStates);
+      var updateBarChart = loadBarChart(airlines);
+      var updateLineChart = loadLineChart();
+
+      function updateAverages(selectionType, selection) {
+        var airportAverages = {};
+        var airlineAverages = {};
+        var monthAverages = {};
+
+        data.forEach(function(d) {
+
+          if (selectionType == 'airport' && d.airport.name != selection) return;
+          if (selectionType == 'airline' && d.airline != selection) return;
+          if (selectionType == 'month' && d.month != selection) return;
+
+          var airportAverage = airportAverages[d.airport.name];
+          if (airportAverage) {
+            airportAverage.avg += d.avgArrDelay;
+            airportAverage.flightCount += d.flightCount;
+            airportAverage.dataCount += 1;
+          }
+          else {
+            airportAverages[d.airport.name] = {
+              airport: d.airport,
+              avg: d.avgArrDelay,
+              flightCount: d.flightCount,
+              dataCount: 1
+            };
+          }
+
+          var airlineAverage = airlineAverages[d.airline];
+          if (airlineAverage) {
+            airlineAverage.avg += d.avgArrDelay;
+            airlineAverage.flightCount += d.flightCount;
+            airlineAverage.dataCount += 1;
+          }
+          else {
+            airlineAverages[d.airline] = {
+              airline: d.airline,
+              avg: d.avgArrDelay,
+              flightCount: d.flightCount,
+              dataCount: 1
+            }
+          }
+
+          var monthAverage = monthAverages[d.month];
+          if (monthAverage) {
+            monthAverage.avg += d.avgArrDelay;
+            monthAverage.flightCount += d.flightCount;
+            monthAverage.dataCount += 1;
+          }
+          else {
+            monthAverages[d.month] = {
+              month: d.month,
+              avg: d.avgArrDelay,
+              flightCount: d.flightCount,
+              dataCount: 1
+            }
+          }
+        });
+
+        airportAverages = Object.values(airportAverages).map(function (d) {
+          d.avg /= d.dataCount;
+          return d;
+        });
+        airlineAverages = Object.values(airlineAverages).map(function (d) {
+          d.avg /= d.dataCount;
+          return d;
+        });
+        monthAverages = Object.values(monthAverages).map(function (d) {
+          d.avg /= d.dataCount;
+          return d;
+        });
+
+        console.log(airportAverages);
+        console.log(airlineAverages);
+        console.log(monthAverages);
+
+        updateMap(airportAverages);
+        updateBarChart(airlineAverages);
+        updateLineChart(monthAverages);
       }
 
-      var monthAverage = monthAverages[d.month];
-      if (monthAverage) {
-        monthAverage.avg += d.avgArrDelay;
-        monthAverage.flightCount += d.flightCount;
-        monthAverage.dataCount += 1;
-      }
-      else {
-        monthAverages[d.month] = {
-          month: d.month,
-          avg: d.avgArrDelay,
-          flightCount: d.flightCount,
-          dataCount: 1
-        }
-      }
+      updateAverages();
     });
-
-    airportAverages = Object.values(airportAverages).map(function (d) {
-      d.avg /= d.dataCount;
-      return d;
-    });
-    airlineAverages = Object.values(airlineAverages).map(function (d) {
-      d.avg /= d.dataCount;
-      return d;
-    });
-    monthAverages = Object.values(monthAverages).map(function (d) {
-      d.avg /= d.dataCount;
-      return d;
-    });
-
-    console.log(airportAverages);
-    console.log(airlineAverages);
-    console.log(monthAverages);
-
-    // Load chart
-    loadMap(airportAverages);
-    loadBarChart(airlineAverages);
-    loadLineChart(monthAverages);
   });
 }
 
-function loadMap(data) {
-  d3.json('us-states.json', function (error, usStates) {
+function loadMap(usStates) {
     var width = 960;
     var height = 600;
 
@@ -108,17 +131,15 @@ function loadMap(data) {
 
     var delayScale = d3.scalePow()
       .exponent(2)
-      .domain([0, d3.max(data, function (d) { return Math.abs(d.avg); })])
-      .range([10, 100]);
+      .domain([minDelay, maxDelay])
+      .range([0, 100]);
 
     var proj = d3.geoAlbersUsa();
     var geoPath = d3.geoPath(proj);
-    data.forEach(function (d) {
-      d.pos = proj([d.airport.lon, d.airport.lat]);
-      // console.log([d.airport.lon, d.airport.lat], d.pos);
-    });
 
     var states = canvas
+      .append('g')
+      .classed('states', true)
       .selectAll('.state')
       .data(usStates.features)
       .enter()
@@ -129,94 +150,103 @@ function loadMap(data) {
         .append('path')
         .attr('d', geoPath);
 
-    var airports = canvas
-      .selectAll('.airport')
-      .data(data)
-      .enter()
-        .append('g')
-        .classed('airport', true)
+    canvas
+      .append('g')
+      .classed('airports', true)
+
+    function update(data) {
+      data.forEach(function (d) {
+        d.pos = proj([d.airport.lon, d.airport.lat]);
+      });
+
+      // delayScale
+      //   .domain([0, d3.max(data, function (d) { return Math.abs(d.avg); })]);
+
+      var airports = canvas.select('.airports')
+        .selectAll('.airport')
+        .data(data, function (d) { return d.airport.name; })
+
+      // ENTER
+
+      var enter = airports
+        .enter()
+          .append('g')
+          .classed('airport', true);
+
+      enter
+        .append('circle');
+
+      // EXIT
+
+      airports
+        .exit()
+        .remove();
+
+      // UPDATE
+
+      var airports = canvas.select('.airports')
+        .selectAll('.airport');
+
+      airports
+        .attr('display', function(d) { return d.dataCount > 0 ? 'inherit' : 'none'; })
         .classed('late', function (d) { return d.avg > 0; })
         .classed('early', function (d) { return d.avg < 0; })
         .classed('on-time', function (d) { return d.avg == 0; });
 
-    airports
-      .append('circle')
-      .attr('r', function (d) { return Math.sqrt(delayScale(Math.abs(d.avg))); })
-      .attr('cx', function (d) { return d.pos[0]; })
-      .attr('cy', function (d) { return d.pos[1]; });
-  })
+      airports.select('circle')
+        .attr('r', function (d) { return Math.sqrt(delayScale(Math.abs(d.avg))); })
+        .attr('cx', function (d) { return d.pos[0]; })
+        .attr('cy', function (d) { return d.pos[1]; });
+    }
+
+    return update;
 }
 
 /**
  * Loads bar chart from the data set into the SVG element.
  * @param {data} The data set from the input file.
  */
-function loadBarChart(data) {
+function loadBarChart(airlines) {
   var svg = d3.select('#bar-canvas')
   .attr('width', canvasWidth)
   .attr('height', canvasHeight);
 
-  // Calculate max value for domain
-  var maxAvgValue = d3.max(data.map(function(d) {
-      return d.avg;
-    }));
-
   // Y axis scale
   // Nicely round domain value max to be the next 10 above maximum value
   var barHeightScale = d3.scaleLinear()
-    .domain([0.0, (Math.floor(maxAvgValue / 10) + 1) * 10])
+    .domain([minDelay, maxDelay])
     .rangeRound([0, barMaxHeight]);
 
-  // Bars group
-  var avgDelayBars = svg
-    .append('g')
+  var graphWidth = airlines.length * (barWidth + barSpacing);
+
+  var airlineScale = d3.scalePoint()
+    .domain(airlines)
+    .range([canvasWidth / 2 - graphWidth / 2, canvasWidth / 2 + graphWidth / 2]);
+
+  svg.append('g')
     .classed('percent-bars', true)
-    .attr('transform', 'translate(' + ((canvasWidth / 2) - data.length * (barWidth + barSpacing) / 2) + ',' + (canvasHeight / 2 + barMaxHeight / 2) + ')')
-    .selectAll('.percent-bar')
-    .data(data)
+    .attr('transform', 'translate(0,' + (canvasHeight / 2 + barMaxHeight / 2) + ')');
+
+  svg.append('g')
+    .classed('airline-labels', true)
+    .selectAll('.airline-label')
+    .data(airlines)
     .enter()
-    .append('g')
-    .classed('percent-bar', true)
-    .attr('transform', function(d, i) {
-      return 'translate(' + (i * (barWidth + barSpacing) + barWidth / 2) + ',0)';
-    });
+      .append('text')
+      .classed('airline-label', true)
+      .text(function (d) { return d; })
+      .attr('y', function (d) { return -airlineScale(d) - barWidth/2; })
+      .attr('x', canvasHeight / 2 + barMaxHeight / 2 + 5)
+      .attr("transform", "rotate(90, 0, 0)")
+      .attr('alignment-baseline', 'middle');
 
-  // Bars
-  avgDelayBars
-    .append('rect')
-    .attr('x', function(d) {
-      return -barWidth / 2;
-    })
-    .attr('y', function(d) {
-      return -barHeightScale(d.avg);
-    })
-    .attr('width', barWidth)
-    .attr('height', function(d) {
-      return barHeightScale(d.avg)
-    })
-    .attr('fill', 'black');
-
-  // Labels on X axis
-  var percentBarLabels = avgDelayBars
-    .append('text')
-    .attr('x', 5)
-    .attr('y', 5)
-    .text(function(d) {
-      return d.airline;
-    })
-    .attr("transform", "rotate(90, 0, 0)");
-
-  // Invert Y axis scale for left axis
-  barHeightScale.rangeRound([barMaxHeight, 0]);
-  var barAxis = d3.axisLeft(barHeightScale);
 
   // Left axis
-  var barHeightAxis = d3
+  var barHeightAxis = svg
     .select('.percent-bars')
     .append('g')
     .classed('y-axis', true)
-    .attr('transform', 'translate(' + (-5) + ',' + (-barMaxHeight) + ')')
-    .call(barAxis);
+    .attr('transform', 'translate(' + (canvasWidth / 2 - graphWidth / 2 - 5) + ',' + (-barMaxHeight) + ')')
 
   // Label
   barHeightAxis.append('text')
@@ -225,9 +255,69 @@ function loadBarChart(data) {
     .attr("y", -margin.left)
     .attr("transform", "rotate(-90, 0, 0)")
     .text('Average Arrival Delay');
+
+  var numAirlines = null;
+
+  function update(data) {
+    // barHeightScale
+    //   // .domain([0.0, (Math.floor(d3.max(data.map(function(d) { return d.avg; })) / 10) + 1) * 10]);
+    //   .domain(d3.extent(data, function (d) { return d.avg; }));
+
+    if (numAirlines === null) {
+      numAirlines = data.length;
+    }
+
+    var bars = svg.select('.percent-bars')
+      .selectAll('.percent-bar')
+      .data(data, function (d) { return d.airline; });
+
+    // ENTER
+
+    var enter = bars
+      .enter()
+        .append('g')
+        .classed('percent-bar', true);
+
+    enter
+      .append('rect')
+      .attr('width', barWidth)
+      .attr('fill', 'black');
+
+    // EXIT
+
+    bars
+      .exit()
+      .remove();
+
+    // UPDATE
+
+    var bars = svg.select('.percent-bars')
+      .selectAll('.percent-bar');
+
+    var update = bars
+      .attr('transform', function(d) {
+        return 'translate(' + airlineScale(d.airline) + ',0)';
+      });
+
+    update.select('rect')
+      .attr('y', function(d) {
+        return -barHeightScale(d.avg);
+      })
+      .attr('height', function(d) {
+        return barHeightScale(d.avg)
+      });
+
+    var barAxis = d3.axisLeft(barHeightScale.copy().rangeRound([barMaxHeight, 0]));
+
+    svg.select('.percent-bars')
+      .select('.y-axis')
+      .call(barAxis);
+  }
+
+  return update;
 }
 
-function loadLineChart(data) {
+function loadLineChart() {
   var svg = d3.select('#line-canvas')
     .attr('width', canvasWidth)
     .attr('height', canvasHeight);
@@ -238,40 +328,52 @@ function loadLineChart(data) {
     .padding(0.25);
 
   var avgDelayScale = d3.scaleLinear()
-    .domain([0.0, d3.max(data.map(function(d) {
-      return d.avg;
-    }))])
+    .domain([minDelay, maxDelay])
     .rangeRound([canvasHeight - margin.bottom, 0]);
 
   var line = d3.line()
     .x(function(d) {
       return monthScale(d.month);
-    })
-    .y(function(d) {
-      return avgDelayScale(d.avg);
     });
 
-    var leftAxis = d3.axisLeft(avgDelayScale);
-    var botAxis = d3.axisBottom(monthScale)
-      .tickFormat(function(d) {
-        return d3.timeFormat('%b')(d3.timeParse('%m')(d));
+  svg.append('g')
+    .attr('class', 'y-axis')
+    .attr('transform', 'translate(' + margin.left + ',0)');
+
+  svg.append('g')
+    .attr('class', 'x-axis')
+    .attr('transform', 'translate(' + margin.left + ',' + (canvasHeight - margin.bottom) + ')');
+
+  svg.append('path')
+    .attr('class', 'line')
+    .attr('transform', 'translate(' + margin.left + ', 0)')
+    .attr('fill', 'none')
+    .attr('stroke', 'black');
+
+  function update(data) {
+    // avgDelayScale
+    //   .domain(d3.extent(data, function(d) { return d.avg; }));
+
+    // UPDATE
+
+    line
+      .y(function(d) {
+        return avgDelayScale(d.avg);
       });
 
-    svg.append('g')
-      .attr('class', 'y-axis')
-      .attr('transform', 'translate(' + margin.left + ',0)')
-      .call(leftAxis);
+    svg.select('.y-axis')
+      .call(d3.axisLeft(avgDelayScale));
 
-    svg.append('g')
-      .attr('class', 'x-axis')
-      .attr('transform', 'translate(' + margin.left + ',' + (canvasHeight - margin.bottom) + ')')
-      .call(botAxis);
+    svg.select('.x-axis')
+      .call(d3.axisBottom(monthScale)
+        .tickFormat(function(d) {
+          return d3.timeFormat('%b')(d3.timeParse('%m')(d));
+        }));
 
-    svg.append('path')
+    svg.select('.line')
       .datum(data)
-      .attr('class', 'line')
-      .attr('d', line)
-      .attr('transform', 'translate(' + margin.left + ', 0)')
-      .attr('fill', 'none')
-      .attr('stroke', 'black');
+      .attr('d', line);
+  }
+
+  return update;
 }

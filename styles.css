@@ -2,7 +2,11 @@ body {
   font-family: Roboto;
 }
 
-.label {
+svg {
+  margin-bottom: 4em;
+}
+
+.label, .airline-label {
   fill: black;
 }
 
