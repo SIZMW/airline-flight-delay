@@ -224,7 +224,6 @@ function loadBarChart(data) {
     .attr('x', -barMaxHeight / 2 + 50)
     .attr("y", -margin.left)
     .attr("transform", "rotate(-90, 0, 0)")
-    .style('stroke', 'black')
     .text('Average Arrival Delay');
 }
 

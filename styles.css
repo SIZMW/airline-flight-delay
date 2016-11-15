@@ -2,6 +2,10 @@ body {
   font-family: Roboto;
 }
 
+.label {
+  fill: black;
+}
+
 .state {
   fill: none;
   stroke: black;
