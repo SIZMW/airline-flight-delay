@@ -18,7 +18,7 @@ This chart shows the average arrival delay as bar heights, categorized by variou
 
 Selecting a specific airport in the `Bubble Chart` will filter the data for average delay to airlines arriving to the selected airport.
 
-Selecting a specific year in the `Point Chart` will filter the data for average delay to airlines and flights in the selected year.
+Selecting a specific month in the `Point Chart` will filter the data for average delay to airlines and flights in the selected month.
 
 ### Bubble Chart On U.S. State Map
 ![Bubble Map](/img/bubble-map.png)
@@ -27,12 +27,12 @@ This chart shows the locations of the airports on the U.S. state map with a bubb
 
 Selecting a specific airline in the `Bar Chart` will show the bubble sizes of each airport to be the average arrival delay of that airline company to each of the airports where they had flights arriving.
 
-Selecting a specific year in the `Point Chart` will filter the data for average delay to airlines and flights in the selected year.
+Selecting a specific month in the `Point Chart` will filter the data for average delay to airlines and flights in the selected month.
 
-### Point Chart Across Years
+### Point Chart Across Months
 ![Point Chart](/img/point-chart.png)
 
-This chart shows the average arrival delay over the course of a specific year. Over the year, the chart shows the average arrival delay for each month in that year, which displays the progression of time and how the average arrival delay changes. Overall, we want to show the change in average arrival delay as time moves forward, either due to technological improvements or better coordination.
+This chart shows the average arrival delay over the course the months in a year. Over the months, the chart shows the average arrival delay, which displays the progression of time and how the average arrival delay changes. Overall, we want to show the change in average arrival delay as time moves forward, either due to technological improvements or better coordination.
 
 Selecting a specific airline in the `Bar Chart` will show the average arrival delay across the specific year for only that airline.
 
