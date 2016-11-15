@@ -209,7 +209,7 @@ function loadMap(usStates) {
 function loadBarChart(airlines) {
   var svg = d3.select('#bar-canvas')
   .attr('width', canvasWidth)
-  .attr('height', canvasHeight + 150);
+  .attr('height', canvasHeight + 30);
 
   // Y axis scale
   // Nicely round domain value max to be the next 10 above maximum value
@@ -225,7 +225,7 @@ function loadBarChart(airlines) {
 
   svg.append('g')
     .classed('percent-bars', true)
-    .attr('transform', 'translate(0,' + (canvasHeight / 2 + barMaxHeight / 2) + ')');
+    .attr('transform', 'translate(0,' + (barMaxHeight + 10) + ')');
 
   svg.append('g')
     .classed('airline-labels', true)
@@ -236,7 +236,7 @@ function loadBarChart(airlines) {
       .classed('airline-label', true)
       .text(function (d) { return d; })
       .attr('y', function (d) { return -airlineScale(d) - barWidth/2; })
-      .attr('x', canvasHeight / 2 + barMaxHeight / 2 + 5)
+      .attr('x', barMaxHeight + 10 + 5)
       .attr("transform", "rotate(90, 0, 0)")
       .attr('alignment-baseline', 'middle');
 
