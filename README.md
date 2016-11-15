@@ -53,6 +53,10 @@ For the bar chart, we used colors to distinguish the different airline companies
 
 For the line chart, we used color on the data points to show the specific values for each month, which identifies the averages for each month. The line then shows the relative trends in the average arrival delay between months.
 
+### Known Issue
+
+One known issue is that under certain selections, the range of average arrival delays can be extreme (either much higher than the rest of the data or much lower). This may be a result of that average being calcuated from too few flight data. In these cases, the line graph will go off the scale and the bars will not display if they go below the minimum.
+
 ## Resources
 * [Stanford interesting datasets](http://cjlab.stanford.edu/2015/09/30/lab-launch-and-data-sets/)
 * [d3 time formatting](http://bl.ocks.org/zanarmstrong/ca0adb7e426c12c06a95)
