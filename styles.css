@@ -2,6 +2,11 @@ body {
   font-family: Roboto;
 }
 
+#instructions {
+  width: 40em;
+  text-align: left;
+}
+
 #vis {
   margin-top: 5em;
 }

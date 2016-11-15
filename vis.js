@@ -60,7 +60,7 @@ function loadJSON() {
             .attr('x', 500)
             .attr('y', 30)
             .attr('text-anchor', 'middle')
-            .text('Average Arrival Delay per Airport')
+            .text('Average Arrival Delay per Airport');
 
           canvas
             .append('g')
@@ -172,6 +172,13 @@ function loadJSON() {
         var svg = d3.select('#bar-canvas')
         .attr('width', canvasWidth)
         .attr('height', canvasHeight + 30);
+
+        svg
+          .append('text')
+          .attr('x', canvasWidth/2)
+          .attr('y', 30)
+          .attr('text-anchor', 'middle')
+          .text('Average Arrival Delay per Airline');
 
         // Y axis scale
         // Nicely round domain value max to be the next 10 above maximum value
@@ -298,6 +305,13 @@ function loadJSON() {
         var svg = d3.select('#line-canvas')
           .attr('width', canvasWidth)
           .attr('height', canvasHeight);
+
+        svg
+          .append('text')
+          .attr('x', canvasWidth/2)
+          .attr('y', 30)
+          .attr('text-anchor', 'middle')
+          .text('Average Arrival Delay per Month');
 
         var monthScale = d3.scalePoint()
           .domain([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12])
@@ -536,6 +550,13 @@ function loadJSON() {
       }
 
       updateAverages();
+
+      $(document).keypress(function (event) {
+        if (event.which == 32) {
+          updateAverages();
+          event.preventDefault();
+        }
+      })
     });
   });
 }

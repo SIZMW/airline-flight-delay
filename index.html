@@ -10,7 +10,10 @@
     <script src="https://d3js.org/topojson.v2.min.js"></script>
     <center>
       <h1>Average Flight Arrival Delay</h1>
-      Data taken from every domestic U.S. flight between 2006 and 2015.
+      <div id="instructions">
+        Data taken from every domestic U.S. flight between 2006 and 2015.<br>
+        Click on a data point in any of the visualizations to filter the data by that point. For example, clicking on the bar for an airline in the second visualization will filter the data for the whole page by that airline. Press the space key to reset the filter.
+      </div>
       <div id="vis">
         <svg id="map-canvas"></svg>
         <svg id="bar-canvas"></svg>
