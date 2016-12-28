@@ -6,9 +6,21 @@ Teammates:
 * [Aditya Nivarthi](https://github.com/SIZMW)
 
 ## Description
-This project demonstrates a visualization with multiple views on the same data, each of which is able to update and drill down into data based on points selected in other views.
+This project demonstrates a visualization with multiple views on the same data, each of which is able to update and drill down into data based on points selected in other views. Our visualization shows different views on data about airplane arrival delay across different airports, airlines and months of the year.
 
+### Dataset
 Our data source comes from [here](http://www.transtats.bts.gov/DL_SelectFields.asp?Table_ID=236), which is from the U.S. Department of Transportation, Bureau of Transportation Statistics.
+
+The columns we specifically extracted from this data are listed below:
+* `FL_DATE`
+* `UNIQUE_CARRIER`
+* `ORIGIN_AIRPORT_ID`
+* `ORIGIN_WAC`
+* `DEST_AIRPORT_ID`
+* `DEST_WAC`
+* `DEP_DELAY`
+* `ARR_DELAY`
+
 
 ### Visualizations
 #### Bar Chart
