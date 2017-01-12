@@ -176,7 +176,7 @@ function loadJSON() {
         svg
           .append('text')
           .attr('x', canvasWidth/2)
-          .attr('y', 30)
+          .attr('y', 15)
           .attr('text-anchor', 'middle')
           .text('Average Arrival Delay per Airline');
 
@@ -230,9 +230,15 @@ function loadJSON() {
         var numAirlines = null;
 
         function update(data) {
-          // barHeightScale
-          //   // .domain([0.0, (Math.floor(d3.max(data.map(function(d) { return d.avg; })) / 10) + 1) * 10]);
-          //   .domain(d3.extent(data, function (d) { return d.avg; }));
+          var min = (Math.floor(d3.min(data.map(function(d) { return d.avg; }))));
+          var max = (Math.floor(d3.max(data.map(function(d) { return d.avg; }))));
+
+          var min = (min < 0) ? min * 1.5 : min * 0.8;
+          var max = (max < 0) ? max * 0.8 : max * 1.5;
+
+          barHeightScale
+            .domain([min, max]);
+            // .domain(d3.extent(data, function (d) { return d.avg; }));
 
           if (numAirlines === null) {
             numAirlines = data.length;
@@ -353,8 +359,9 @@ function loadJSON() {
           .text('Average Arrival Delay');
 
         function update(data) {
-          // avgDelayScale
-          //   .domain(d3.extent(data, function(d) { return d.avg; }));
+          avgDelayScale
+            .domain([((Math.floor(d3.min(data, function(d) { return d.avg; })) / 10) - 1) * 10,
+              ((Math.floor(d3.max(data, function(d) { return d.avg; })) / 10) + 1) * 10]);
 
           var dots = svg.select('.dots')
             .selectAll('.dot')
