@@ -1,4 +1,4 @@
-CS 573: Assignment 5 - Visualizations And Multiple Views
+Airline Flight Delay Visualization
 ===============================
 
 Teammates:
