@@ -49,25 +49,10 @@ Selecting a specific airline in the `Bar Chart` will show the average arrival de
 
 Selecting a specific airport in the `Bubble Chart` will show only the average arrival delay at that airport.
 
-### Contributions
-Daniel contributed most to the map visualization and interactions and the preprocessing for our data set.
-
-Aditya contributed most to the bar graph visualization and interactions and the line graph visualization and interactions.
-
-### Technical Achievements
-One of the heaviest operations when doing interactions between views is having to change the other views based on selections. We spent time to make the update process easy by creating update functions for each of the visualizations. This made it faster and more efficient to actually update the data in the visualization, not just clearing the SVG and redrawing all the new data. It also enabled us to simply recalculate the new values instead of reloading the data with parameters from the selection, which saves times.
-
-### Design Achievements
-For each of the visualization, we wanted to use color to distinguish the different data points to provide a means to easily identify some aspect of the data. For the map, we made the color represent the contextual representation of the values of the average arrival delay, meaning if the flights on average were early or late.
-
-For the bar chart, we used colors to distinguish the different airline companies so it is easy tell the different values from each other.
-
-For the line chart, we used color on the data points to show the specific values for each month, which identifies the averages for each month. The line then shows the relative trends in the average arrival delay between months.
-
 ## Resources
 * [Stanford interesting datasets](http://cjlab.stanford.edu/2015/09/30/lab-launch-and-data-sets/)
 * [d3 time formatting](http://bl.ocks.org/zanarmstrong/ca0adb7e426c12c06a95)
 * [d3 line chart example](https://bl.ocks.org/mbostock/3883245)
 
 ## Usage
-The visualization can be seen [here](https://sizmw.github.io/05-MapsAndViews/).
+The visualization can be seen [here](https://sizmw.github.io/airline-flight-delay/).
